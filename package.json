@@ -31,5 +31,8 @@
       "prettier --write",
       "eslint --fix"
     ]
+  },
+  "dependencies": {
+    "moment": "^2.28.0"
   }
 }

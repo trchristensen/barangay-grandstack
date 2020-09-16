@@ -1,6 +1,7 @@
 import React from 'react'
 import { withStyles } from '@material-ui/core/styles'
 import { Paper, TextField, Button } from '@material-ui/core'
+import moment from 'moment'
 
 import { useQuery, gql, useMutation } from '@apollo/client'
 
@@ -37,6 +38,10 @@ const GET_POSTS = gql`
       published {
         formatted
       }
+      author {
+        name
+        userId
+      }
       comments {
         content
         commentId
@@ -60,11 +65,55 @@ const CREATE_POST = gql`
   }
 `
 
+const CREATE_POST_AUTHOR_REL = gql`
+  mutation addPostAuthor($userId: ID!, $postId: ID!) {
+    AddPostAuthor(to: { userId: $userId }, from: { postId: $postId }) {
+      to {
+        userId
+        name
+      }
+      from {
+        postId
+        author {
+          userId
+          name
+        }
+      }
+    }
+  }
+`
+
 const Feed = (props) => {
   const { classes } = props
 
   const { loading, data, error } = useQuery(GET_POSTS)
-  const [createPost] = useMutation(CREATE_POST)
+  const [createPostAuthor] = useMutation(CREATE_POST_AUTHOR_REL, {
+    onCompleted: () => {
+      console.log('completed post->author relationship!')
+    },
+  })
+
+  function CreatePostAuthorRel(payload) {
+    console.log(payload)
+
+    createPostAuthor({
+      variables: payload,
+    })
+  }
+
+  const [createPost] = useMutation(CREATE_POST, {
+    onCompleted: (res) => {
+      console.log('completed post creation!', res)
+
+      const payload = {
+        postId: res.CreatePost.postId,
+        userId: '82c5c6da-6fa1-4432-a371-6b60cb2d52a7',
+      }
+
+      CreatePostAuthorRel(payload)
+    },
+  })
+
   const [postContent, setPostContent] = React.useState(null)
 
   return (
@@ -76,7 +125,6 @@ const Feed = (props) => {
         onSubmit={(e) => {
           e.preventDefault()
           const currentDateTime = new Date().toISOString()
-          console.log(currentDateTime)
 
           createPost({
             variables: {
@@ -119,8 +167,9 @@ const Feed = (props) => {
               }}
               key={p.postId}
             >
-              <li>{p.postId}</li>
-              <li>{p.published.formatted}</li>
+              <li>postId: {p.postId}</li>
+              <li>posted by {p.author.name}</li>
+              <li>{moment(p.published.formatted).fromNow()}</li>
               <li>{p.content}</li>
             </ul>
           )

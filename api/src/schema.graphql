@@ -90,7 +90,7 @@ type Post {
   content: String!
   comments: [Comment] @relation(name: "COMMENT_ON", direction: "IN")
   published: DateTime
-  author: User @relation(name: "POSTED", direction: "OUT")
+  author: User @relation(name: "POSTED_BY", direction: "OUT")
 }
 
 type Comment {
