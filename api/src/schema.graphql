@@ -1,0 +1,115 @@
+type Barangay {
+  barangayId: ID!
+  name: String!
+  users: [User] @relation(name: "LIVES_IN", direction: "IN")
+}
+
+type Municipality {
+  municipalityId: ID!
+  name: String!
+  class: String!
+  barangays: [Barangay] @relation(name: "MUNICIPALITY_OF", direction: "OUT")
+}
+
+type City {
+  cityId: ID!
+  name: String!
+  class: String!
+  barangays: [Barangay] @relation(name: "CITY_OF", direction: "OUT")
+}
+
+type Province {
+  provinceId: ID!
+  name: String!
+  cities: [City] @relation(name: "PROVINCE_OF", direction: "OUT")
+  municipalities: [Municipality]
+  @relation(name: "PROVINCE_OF", direction: "OUT")
+}
+
+type Region {
+  regionId: ID!
+  name: String!
+  provinces: [Province] @relation(name: "REGION_OF", direction: "OUT")
+}
+
+type User {
+  userId: ID!
+  name: String
+  reviews: [Review] @relation(name: "WROTE", direction: "OUT")
+  avgStars: Float
+  @cypher(
+    statement: "MATCH (this)-[:WROTE]->(r:Review) RETURN toFloat(avg(r.stars))"
+  )
+  numReviews: Int
+  @cypher(statement: "MATCH (this)-[:WROTE]->(r:Review) RETURN COUNT(r)")
+  recommendations(first: Int = 3): [Business]
+  @cypher(
+    statement: "MATCH (this)-[:WROTE]->(r:Review)-[:REVIEWS]->(:Business)<-[:REVIEWS]-(:Review)<-[:WROTE]-(:User)-[:WROTE]->(:Review)-[:REVIEWS]->(rec:Business) WHERE NOT EXISTS( (this)-[:WROTE]->(:Review)-[:REVIEWS]->(rec) ) WITH rec, COUNT(*) AS num ORDER BY num DESC LIMIT $first RETURN rec"
+  )
+  businesses: [Business] @relation(name: "OWNS", direction: "OUT")
+}
+
+type Business {
+  businessId: ID!
+  name: String!
+  address: String
+  city: String
+  state: String
+  location: Point
+  avgStars: Float
+  @cypher(
+    statement: "MATCH (this)<-[:REVIEWS]-(r:Review) RETURN coalesce(avg(r.stars),0.0)"
+  )
+  reviews: [Review] @relation(name: "REVIEWS", direction: "IN")
+  categories: [Category] @relation(name: "IN_CATEGORY", direction: "OUT")
+  # owner: [Business] @relation(name: "OWNS", direction: "IN")
+}
+
+type Review {
+  reviewId: ID!
+  stars: Float
+  text: String
+  date: Date
+  business: Business @relation(name: "REVIEWS", direction: "OUT")
+  user: User @relation(name: "WROTE", direction: "IN")
+  notes: String
+}
+
+type Category {
+  name: ID!
+  businesses: [Business] @relation(name: "IN_CATEGORY", direction: "IN")
+}
+
+type RatingCount {
+  stars: Float!
+  count: Int!
+}
+
+type Post {
+  postId: ID!
+  content: String!
+  comments: [Comment] @relation(name: "COMMENT_ON", direction: "IN")
+  published: DateTime
+  author: User @relation(name: "POSTED", direction: "OUT")
+}
+
+type Comment {
+  commentId: ID!
+  content: String!
+  published: DateTime
+}
+
+type Mutation {
+  mergeBusinessCategory(categories: [String!]!, businessId: ID!): Business
+  @cypher(
+    statement: "MATCH (b:Business {businessId: $businessId}) UNWIND $categories AS cat MERGE (c:Category {name: cat}) MERGE (b)-[:IN_CATEGORY]->(c) RETURN b"
+  )
+}
+
+type Query {
+  userCount: Int! @cypher(statement: "MATCH (u:User) RETURN COUNT(u)")
+  ratingsCount: [RatingCount]
+  @cypher(
+    statement: "MATCH (r:Review) WITH r.stars AS stars, COUNT(*) AS count ORDER BY stars RETURN {stars: stars, count: count}"
+  )
+}
