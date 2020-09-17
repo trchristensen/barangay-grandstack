@@ -1,11 +1,12 @@
 import React from 'react'
 import { withStyles } from '@material-ui/core/styles'
 import { Paper, TextField, Button } from '@material-ui/core'
-import moment from 'moment'
 
 import { useQuery, gql, useMutation } from '@apollo/client'
 
-import Title from '../Title'
+import BadgeAvatar from '../BadgeAvatar/BadgeAvatar'
+import ImageAvatar from '../Avatar/Avatar'
+import PostCard from '../PostCard/PostCard'
 
 const styles = (theme) => ({
   root: {
@@ -13,12 +14,6 @@ const styles = (theme) => ({
     marginTop: theme.spacing(3),
     overflowX: 'auto',
     margin: 'auto',
-  },
-  form: {
-    display: 'flex',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    marginBottom: theme.spacing(3),
   },
   table: {
     minWidth: 700,
@@ -102,7 +97,7 @@ const Feed = (props) => {
     },
   })
   const handleDeletePost = (e) => {
-    const key = e.currentTarget.getAttribute('postId')
+    const key = e.currentTarget.getAttribute('value')
     console.log(key)
     deletePost({
       variables: {
@@ -134,77 +129,70 @@ const Feed = (props) => {
     },
   })
 
-  const [postContent, setPostContent] = React.useState(null)
+  const [postContent, setPostContent] = React.useState('')
 
   return (
-    <Paper style={{ padding: '2em' }}>
-      <Title>Create Post</Title>
+    <>
+      <Paper rounded className="mb-4 pl-2 pr-4 py-5">
+        <form
+          className="flex justify-between w-full"
+          onSubmit={(e) => {
+            e.preventDefault()
+            const currentDateTime = new Date().toISOString()
 
-      <form
-        className={classes.form}
-        onSubmit={(e) => {
-          e.preventDefault()
-          const currentDateTime = new Date().toISOString()
-
-          createPost({
-            variables: {
-              content: postContent,
-              published: {
-                formatted: currentDateTime,
+            createPost({
+              variables: {
+                content: postContent,
+                published: {
+                  formatted: currentDateTime,
+                },
               },
-            },
-          })
+            })
 
-          setPostContent('')
-        }}
-      >
-        <TextField
-          id="publishPost"
-          label="What is on your mind?"
-          value={postContent}
-          onChange={(e) => setPostContent(e.target.value)}
-          margin="normal"
-          variant="outlined"
-          type="text"
-        />
-        <Button variant="contained" color="primary" type="submit">
-          Publish
-        </Button>
-      </form>
-      <Title>Feed</Title>
+            setPostContent('')
+          }}
+        >
+          <ImageAvatar />
+          <TextField
+            style={{
+              marginTop: 0,
+              marginBottom: 0,
+            }}
+            fullWidth={true}
+            id="publishPost"
+            label="What is on your mind?"
+            value={postContent}
+            onChange={(e) => setPostContent(e.target.value)}
+            margin="normal"
+            variant="outlined"
+            type="text"
+          />
+          <Button
+            className="ml-2"
+            variant="contained"
+            color="primary"
+            type="submit"
+          >
+            Publish
+          </Button>
+        </form>
+      </Paper>
+
       {loading && !error && <p>Loading...</p>}
       {error && !loading && <p>Error</p>}
       {data &&
         !loading &&
         !error &&
-        data.Post.map((p) => {
+        data.Post.map((post) => {
           return (
-            <ul
-              style={{
-                listStyleType: 'none',
-                padding: '20px',
-                borderBottom: '1px solid #efefef',
-              }}
-              key={p.postId}
-            >
-              <li>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  postId={p.postId}
-                  onClick={(e) => handleDeletePost(e)}
-                >
-                  Delete Post
-                </Button>
-              </li>
-              <li>postId: {p.postId}</li>
-              <li>posted by {p.author.name}</li>
-              <li>{moment(p.published.formatted).fromNow()}</li>
-              <li>{p.content}</li>
-            </ul>
+            <PostCard
+              key={post.postId}
+              post={post}
+              handleDeletePost={handleDeletePost}
+            />
           )
         })}
-    </Paper>
+    </>
   )
 }
 
