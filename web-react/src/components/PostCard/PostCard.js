@@ -1,6 +1,8 @@
 import React from 'react'
 import moment from 'moment'
 import { Box, Paper, Button } from '@material-ui/core'
+import { ThumbUp, Comment } from '@material-ui/icons'
+import { grey } from '@material-ui/core/colors'
 
 import BadgeAvatar from '../BadgeAvatar/BadgeAvatar'
 
@@ -19,8 +21,14 @@ const PostCard = ({ post, handleDeletePost }) => {
       <Box className="post__content px-3 py-4 text-base">{post.content}</Box>
       <Box className="post__actions border-t border-b border-gray-300">
         <Box className="post__actions-inner w-full flex justify-evenly">
-          <Button className="w-1/2">Like</Button>
-          <Button className="w-1/2">Comment</Button>
+          <Button className="w-1/2">
+            <ThumbUp style={{ color: grey[500] }} />
+            <span className="ml-2">Like</span>
+          </Button>
+          <Button className="w-1/2">
+            <Comment style={{ color: grey[500] }} />
+            <span className="ml-2">Comment</span>
+          </Button>
         </Box>
       </Box>
       <Box className="mt-3 flex justify-end">

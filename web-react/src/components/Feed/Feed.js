@@ -1,12 +1,9 @@
 import React from 'react'
 import { withStyles } from '@material-ui/core/styles'
 import { Paper, TextField, Button } from '@material-ui/core'
-
 import { useQuery, gql, useMutation } from '@apollo/client'
-
-import BadgeAvatar from '../BadgeAvatar/BadgeAvatar'
 import ImageAvatar from '../Avatar/Avatar'
-import PostCard from '../PostCard/PostCard'
+import Card from '../Card/Card'
 
 const styles = (theme) => ({
   root: {
@@ -78,33 +75,8 @@ export const CREATE_POST_AUTHOR_REL = gql`
   }
 `
 
-export const DELETE_POST = gql`
-  mutation($postId: ID!) {
-    DeletePost(postId: $postId) {
-      postId
-      content
-    }
-  }
-`
-
 const Feed = (props) => {
-  const { classes } = props
   const { loading, data, error } = useQuery(GET_POSTS)
-
-  const [deletePost] = useMutation(DELETE_POST, {
-    onCompleted: () => {
-      console.log('post has been successfully deleted!')
-    },
-  })
-  const handleDeletePost = (e) => {
-    const key = e.currentTarget.getAttribute('value')
-    console.log(key)
-    deletePost({
-      variables: {
-        postId: key,
-      },
-    })
-  }
 
   const [createPostAuthor] = useMutation(CREATE_POST_AUTHOR_REL, {
     onCompleted: () => {
@@ -185,11 +157,9 @@ const Feed = (props) => {
         !error &&
         data.Post.map((post) => {
           return (
-            <PostCard
-              key={post.postId}
-              post={post}
-              handleDeletePost={handleDeletePost}
-            />
+            <>
+              <Card className="mb-4" key={post.postId} post={post} />
+            </>
           )
         })}
     </>
