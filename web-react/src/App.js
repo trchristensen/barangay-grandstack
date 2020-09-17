@@ -3,7 +3,7 @@ import React from 'react'
 import { Switch, Route, BrowserRouter as Router } from 'react-router-dom'
 
 import UserList from './components/UserList'
-import Feed from './components/Feed'
+import Feed from './components/Feed/Feed'
 
 import clsx from 'clsx'
 import { makeStyles } from '@material-ui/core/styles'
@@ -29,6 +29,7 @@ import {
   Menu as MenuIcon,
   Dashboard as DashboardIcon,
   People as PeopleIcon,
+  ViewList as ViewListIcon,
 } from '@material-ui/icons'
 import Dashboard from './components/Dashboard'
 
@@ -203,7 +204,14 @@ export default function App() {
                 <ListItemText primary="Dashboard" />
               </ListItem>
             </Link>
-
+            <Link to="/feed" className={classes.navLink}>
+              <ListItem button>
+                <ListItemIcon>
+                  <ViewListIcon />
+                </ListItemIcon>
+                <ListItemText primary="Feed" />
+              </ListItem>
+            </Link>
             <Link to="/users" className={classes.navLink}>
               <ListItem button>
                 <ListItemIcon>
